@@ -9,10 +9,19 @@ class Game:
         self.clock = pygame.time.Clock()
         self.FPS = 60
         self.display = Display(self)
+
+        self.desk_items = [
+            Telephone(),
+            Letter(),
+            PenAndPaper()
+        ]
     
     def update(self, keys_pressed, mouse_pressed, mousex, mousey):
 
         self.display.cursor.update(mousex, mousey)
+
+        for item in self.desk_items:
+            item.update(mousex, mousey)
 
         self.display.update()
 
@@ -24,13 +33,21 @@ class Display:
         self.WIDTH = 900
         self.HEIGHT = 700
 
+        # background
+        filepath = "assets/img/background0.png" #background0.png
+        image = pygame.image.load(filepath)
+        self.background = pygame.transform.scale(image, (self.WIDTH, self.HEIGHT))
+
         self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         pygame.display.set_caption(self.game.name)
         pygame.mouse.set_visible(False)
         self.cursor = Cursor()
     
     def update(self):
-        self.WIN.fill((0, 0, 0))
+        self.WIN.blit(self.background, pygame.Rect(0, 0, self.WIDTH, self.HEIGHT))
+
+        for item in self.game.desk_items:
+            self.WIN.blit(item.sprite, item.transform.rect)
 
         self.WIN.blit(self.cursor.sprite, self.cursor.transform.rect)
 
@@ -78,7 +95,58 @@ class Cursor:
         self.transform.x = mousex
         self.transform.y = mousey
         self.transform.update()
+
+
+class Telephone:
+    def __init__(self):
+        self.transform = Transform(130, 400, 90, 72)
+
+        filepath = "assets/img/telephone0.png"
+        image = pygame.image.load(filepath)
+        self.sprite = pygame.transform.scale(image, (self.transform.width, self.transform.height))
     
+    def update(self, mousex, mousey):
+        if self.transform.left < mousex < self.transform.right and \
+        self.transform.top < mousey < self.transform.bottom:
+            self.transform.y = 380
+        else:
+            self.transform.y = 400
+        self.transform.update()
+
+
+class Letter:
+    def __init__(self):
+        self.transform = Transform(250, 400, 120, 100)
+
+        filepath = "assets/img/letter.png"
+        image = pygame.image.load(filepath)
+        self.sprite = pygame.transform.scale(image, (self.transform.width, self.transform.height))
+    
+    def update(self, mousex, mousey):
+        if self.transform.left < mousex < self.transform.right and \
+        self.transform.top < mousey < self.transform.bottom:
+            self.transform.y = 380
+        else:
+            self.transform.y = 400
+        self.transform.update()
+
+
+class PenAndPaper:
+    def __init__(self):
+        self.transform = Transform(490, 440, 300, 170)
+
+        filepath = "assets/img/penandpaper.png"
+        image = pygame.image.load(filepath)
+        self.sprite = pygame.transform.scale(image, (self.transform.width, self.transform.height))
+    
+    def update(self, mousex, mousey):
+        if self.transform.left < mousex < self.transform.right and \
+        self.transform.top < mousey < self.transform.bottom:
+            self.transform.y = 420
+        else:
+            self.transform.y = 440
+        self.transform.update()
+
 
 def close_save():
     for filename in os.listdir("data"):
