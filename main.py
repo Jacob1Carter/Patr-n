@@ -99,6 +99,9 @@ class Display:
 
             for item in self.game.telephone_items:
                 self.WIN.blit(item.sprite, item.transform.rect)
+                if type(item) == Numbers:
+                    for number in item.number_transforms:
+                        pygame.draw.circle(self.WIN, (255, 0, 0), (item.number_transforms[number].x, item.number_transforms[number].y), 3)
 
         self.WIN.blit(self.cursor.sprite, self.cursor.transform.rect)
 
@@ -106,7 +109,7 @@ class Display:
 
 
 class Transform:
-    def __init__(self, x=0, y=0, width=1, height=1):
+    def __init__(self, x=0, y=0, width=1, height=1, angle=0):
         if width%2 != 0:
             raise ValueError(f"Width must be divisible by 2 ({width}/2 = {width/2})")
         if height%2 != 0:
@@ -123,7 +126,9 @@ class Transform:
         self.right = x + width/2
         self.bottom = y + height/2
 
-        self.rect = pygame.Rect(self.left, self.top, self.width, self.height)
+        self.angle = angle
+
+        self.rect = pygame.transform.rotate(pygame.Rect(self.left, self.top, self.width, self.height), self.angle)
     
     def update(self):
         self.left = self.x - self.width/2
@@ -132,7 +137,7 @@ class Transform:
         self.right = self.x + self.width/2
         self.bottom = self.y + self.height/2
 
-        self.rect = pygame.Rect(self.left, self.top, self.width, self.height)
+        self.rect = pygame.transform.rotate(pygame.Rect(self.left, self.top, self.width, self.height), self.angle)
 
 class Cursor:
     def __init__(self):
@@ -216,17 +221,17 @@ class Numbers:
     def __init__(self, game):
         self.game = game
         self.transform = Transform(460, 420, 232, 232)
-        number_transforms = {
-            0: Transform(354, 506, 40, 40),
-            1: Transform(314, 497, 40, 40),
-            2: Transform(283, 472, 40, 40),
-            3: Transform(265, 435, 40, 40),
-            4: Transform(354, 506, 40, 40),
-            5: Transform(354, 506, 40, 40),
-            6: Transform(354, 506, 40, 40),
-            7: Transform(354, 506, 40, 40),
-            8: Transform(354, 506, 40, 40),
-            9: Transform(354, 506, 40, 40),
+        self.number_transforms = {
+            0: Transform(460, 505, 40, 40),
+            1: Transform(420, 495, 40, 40),
+            2: Transform(390, 470, 40, 40),
+            3: Transform(370, 435, 40, 40),
+            4: Transform(370, 395, 40, 40),
+            5: Transform(387, 360, 40, 40),
+            6: Transform(420, 330, 40, 40),
+            7: Transform(460, 322, 40, 40),
+            8: Transform(500, 333, 40, 40),
+            9: Transform(530, 357, 40, 40),
         }
 
         filepath = "assets/img/numbers.png"
@@ -234,6 +239,10 @@ class Numbers:
         self.sprite = pygame.transform.scale(image, (self.transform.width, self.transform.height))
     
     def update(self, mousex, mousey):
+        if self.transform.left < mousex < self.transform.right and \
+        self.transform.top < mousey < self.transform.bottom:
+            if pygame.mouse.get_pressed()[0]:
+                self.transform.angle += 2
         self.transform.update()
 
 
