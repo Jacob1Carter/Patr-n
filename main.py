@@ -1,4 +1,4 @@
-import pygame, os, shutil
+import pygame, os, shutil, math
 
 
 class Game:
@@ -102,6 +102,7 @@ class Display:
                 if type(item) == Numbers:
                     for number in item.number_transforms:
                         pygame.draw.circle(self.WIN, (255, 0, 0), (item.number_transforms[number].x, item.number_transforms[number].y), 3)
+                    self.WIN.blit(item.numbers_static.sprite, item.numbers_static.rect)
 
         self.WIN.blit(self.cursor.sprite, self.cursor.transform.rect)
 
@@ -135,6 +136,7 @@ class Transform:
             filepath = self.img
             self.img = pygame.image.load(filepath)
             self.sprite = pygame.transform.rotate(pygame.transform.scale(self.img, (self.width, self.height)), self.angle)
+            self.rect = self.sprite.get_rect(center=(self.x, self.y))
         else:
             self.sprite = self.img
     
@@ -149,6 +151,7 @@ class Transform:
 
         if self.img != "none":
             self.sprite = pygame.transform.rotate(pygame.transform.scale(self.img, (self.width, self.height)), self.angle)
+            self.rect = self.sprite.get_rect(center=(self.x, self.y))
         else:
             self.sprite = self.img
 
@@ -234,6 +237,7 @@ class Numbers:
     def __init__(self, game):
         self.game = game
         self.transform = Transform(460, 420, 232, 232, 0, "assets/img/numbers.png")
+        self.numbers_static = Transform(460, 420, 232, 232, 0, "assets/img/numbers-static.png")
         self.number_transforms = {
             0: Transform(460, 505, 40, 40),
             1: Transform(420, 495, 40, 40),
@@ -246,12 +250,53 @@ class Numbers:
             8: Transform(500, 333, 40, 40),
             9: Transform(530, 357, 40, 40),
         }
+
+        self.active_num = False
     
     def update(self, mousex, mousey):
-        if self.transform.left < mousex < self.transform.right and \
-        self.transform.top < mousey < self.transform.bottom:
-            if pygame.mouse.get_pressed()[0]:
-                self.transform.angle += 2
+        if pygame.mouse.get_pressed()[0]:
+            shortest = False
+            closest = False
+            for number in self.number_transforms:
+                distance = math.sqrt(pow(self.number_transforms[number].x - mousex, 2) + pow(self.number_transforms[number].y - mousey, 2))
+
+                if shortest == False and closest == False:
+                    shortest = distance
+                    closest = number
+                else:
+                    if distance < shortest:
+                        shortest = distance
+                        closest = number
+                
+            if shortest <= self.number_transforms[closest].width/2:
+                self.active_num = closest
+        else:
+            self.active_num = False
+
+        if self.active_num != False:
+            a = math.sqrt(pow(self.number_transforms[self.active_num].x - mousex, 2) + pow(self.number_transforms[self.active_num].y - mousey, 2))
+            b = math.sqrt(pow(self.number_transforms[self.active_num].x - self.transform.x, 2) + pow(self.number_transforms[self.active_num].y - self.transform.y, 2))
+            c = math.sqrt(pow(self.transform.x - mousex, 2) + pow(self.transform.y - mousey, 2))
+
+            try:
+                angle = -math.acos((pow(b, 2) + pow(c, 2) - pow(a, 2)) / (2 * b * c))
+            except ValueError:
+                angle = math.radians(0)
+
+            self.transform.angle += math.degrees(angle)
+            for number in self.number_transforms:
+                ax = self.number_transforms[number].x
+                ay = self.number_transforms[number].y
+
+                bx = self.transform.x
+                by = self.transform.y
+
+                cx = bx + (math.cos(angle) * (ax-bx)) + (math.sin(angle) * (ay-by))
+                cy = by - (math.sin(angle) * (ax-bx)) + (math.cos(angle) * (ay-by))
+
+                self.number_transforms[number].x = cx
+                self.number_transforms[number].y = cy
+
         self.transform.update()
 
 
